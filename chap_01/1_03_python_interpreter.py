@@ -59,7 +59,6 @@ print(me)
 # %% boolean
 hungry = True
 sleepy = False
-
 print(type(hungry))
 
 # NOT 연산
