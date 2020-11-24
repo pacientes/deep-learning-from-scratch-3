@@ -9,6 +9,7 @@ class Man:
     def goodbye(self):
         print("Goodbye " + self.name + "!")
 
+
 m = Man("David")
 m.hello()
 m.goodbye()

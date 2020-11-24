@@ -43,17 +43,17 @@ print(a)
 print(a)
 
 # 리스트 슬라이싱
-print(a[0:2]) # 인덱스 0부터 2까지 (인덱스 2는 X)
-print(a[1:]) # 인덱스 1부터 끝까지
-print(a[:3]) # 인덱스 0부터 3까지 (인덱스 3은 X)
-print(a[:-1]) # 처음부터 마지막 원소의 1개 앞까지
-print(a[:-2]) # 처음부터 마지막 원소의 2개 앞까지
+print(a[0:2])  # 인덱스 0부터 2까지 (인덱스 2는 X)
+print(a[1:])  # 인덱스 1부터 끝까지
+print(a[:3])  # 인덱스 0부터 3까지 (인덱스 3은 X)
+print(a[:-1])  # 처음부터 마지막 원소의 1개 앞까지
+print(a[:-2])  # 처음부터 마지막 원소의 2개 앞까지
 
 # %% 딕셔너리
-me = {'height': 100}
-print(me['height']) # 원소 접근
+me = {"height": 100}
+print(me["height"])  # 원소 접근
 
-me['weight'] = 70 # 원소 추가
+me["weight"] = 70  # 원소 추가
 print(me)
 
 # %% boolean
@@ -90,10 +90,12 @@ for i in [1, 2, 3]:
 def hello():
     print("Hello World!")
 
+
 hello()
 
 # %% function continue
 def hello(object):
     print("Hello " + object + "!")
+
 
 hello("cat")

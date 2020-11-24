@@ -1,5 +1,6 @@
 # %% one-dimension array
 import numpy as np
+
 A = np.array([1, 2, 3, 4])
 print(A)
 
@@ -43,7 +44,16 @@ print(A.shape)
 print(np.dot(A, C))
 
 # %% Example... matrix product (2-d and 1-d)
-A = np.array([[1, 2,], [3, 4], [5, 6]])
+A = np.array(
+    [
+        [
+            1,
+            2,
+        ],
+        [3, 4],
+        [5, 6],
+    ]
+)
 print(A.shape)
 
 B = np.array([7, 8])
