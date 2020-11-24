@@ -67,4 +67,6 @@ plt.plot(x, y2, linestyle="--", label="step function")
 plt.ylim(-0.1, 1.1)
 plt.show()
 
-# %%
+# %% relu
+def relu(x):
+    return np.maximum(0, x)
