@@ -39,14 +39,14 @@ def _download(file_name):
     
 def download_mnist():
     for v in key_file.values():
-       _download(v)
+        _download(v)
         
 def _load_label(file_name):
     file_path = dataset_dir + "/" + file_name
     
     print("Converting " + file_name + " to NumPy Array ...")
     with gzip.open(file_path, 'rb') as f:
-            labels = np.frombuffer(f.read(), np.uint8, offset=8)
+        labels = np.frombuffer(f.read(), np.uint8, offset=8)
     print("Done")
     
     return labels
@@ -56,7 +56,8 @@ def _load_img(file_name):
     
     print("Converting " + file_name + " to NumPy Array ...")    
     with gzip.open(file_path, 'rb') as f:
-            data = np.frombuffer(f.read(), np.uint8, offset=16)
+        data = np.frombuffer(f.read(), np.uint8, offset=16)
+
     data = data.reshape(-1, img_size)
     print("Done")
     
@@ -118,7 +119,7 @@ def load_mnist(normalize=True, flatten=True, one_hot_label=False):
         dataset['test_label'] = _change_one_hot_label(dataset['test_label'])    
     
     if not flatten:
-         for key in ('train_img', 'test_img'):
+        for key in ('train_img', 'test_img'):
             dataset[key] = dataset[key].reshape(-1, 1, 28, 28)
 
     return (dataset['train_img'], dataset['train_label']), (dataset['test_img'], dataset['test_label']) 
