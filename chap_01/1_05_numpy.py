@@ -72,5 +72,3 @@ X[np.array([0, 2, 4])]
 print(X > 15)
 
 print(X[X > 15])
-
-# %%
