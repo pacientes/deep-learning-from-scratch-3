@@ -10,6 +10,7 @@ print(A.shape)
 
 print(A.shape[0])
 
+
 # %% two dimension array
 B = np.array([[1, 2], [3, 4], [5, 6]])
 print(B)
@@ -17,6 +18,7 @@ print(B)
 print(np.ndim(B))
 
 print(B.shape)
+
 
 # %% 2-d matrix product
 A = np.array([[1, 2], [3, 4]])
@@ -26,6 +28,8 @@ B = np.array([[5, 6], [7, 8]])
 print(B)
 
 print(np.dot(A, B))
+
+
 # %% other 2-d matrix product
 A = np.array([[1, 2, 3], [4, 5, 6]])
 print(A.shape)
@@ -35,6 +39,7 @@ print(B.shape)
 
 print(np.dot(A, B))
 
+
 # %% example... matrix shape is mismatch
 C = np.array([[1, 2], [3, 4]])
 print(C.shape)
@@ -42,6 +47,7 @@ print(C.shape)
 print(A.shape)
 
 print(np.dot(A, C))
+
 
 # %% Example... matrix product (2-d and 1-d)
 A = np.array(
@@ -60,6 +66,7 @@ B = np.array([7, 8])
 print(B.shape)
 
 print(np.dot(A, B))
+
 
 # %% matrix product in neural network
 X = np.array([1, 2])

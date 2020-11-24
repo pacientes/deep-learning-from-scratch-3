@@ -14,6 +14,7 @@ print(AND(1, 0))
 print(AND(0, 1))
 print(AND(1, 1))
 
+
 # %% add weights and bias
 import numpy as np
 
@@ -25,6 +26,7 @@ print(w * x)
 print(np.sum(w * x))
 
 print(np.sum(w * x) + b)
+
 
 # %% simple perceptron - weights and bias apply AND gate
 def AND(x1, x2):

@@ -34,6 +34,7 @@ print(cross_entropy_error(np.array(y), np.array(t)))
 y = [0.1, 0.05, 0.1, 0.0, 0.05, 0.1, 0.0, 0.6, 0.0, 0.0]
 print(cross_entropy_error(np.array(y), np.array(t)))
 
+
 # %% mini-batch
 import sys, os
 
@@ -46,6 +47,7 @@ from dataset.mnist import load_mnist
 print(x_train.shape)
 print(t_train.shape)
 
+
 # %% get mnist batch
 
 train_size = x_train.shape[0]
@@ -55,9 +57,11 @@ batch_mask = np.random.choice(train_size, batch_size)
 x_batch = x_train[batch_mask]
 t_batch = t_train[batch_mask]
 
+
 # %% numpy random test
 
 print(np.random.choice(60000, 10))
+
 
 # %% cross entropy error for mini batch
 def cross_entropy_error(y, t):

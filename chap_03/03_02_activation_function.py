@@ -21,10 +21,12 @@ print(x)
 y = x > 0
 print(y)
 
+
 # %%
 
 y = y.astype(np.int)
 print(y)
+
 
 # %% plot step function
 import matplotlib.pyplot as plt
@@ -41,6 +43,7 @@ plt.plot(x, y)
 plt.ylim(-0.1, 1.1)
 plt.show()
 
+
 # %% sigmoid function
 def sigmoid(x):
     return 1 / (1 + np.exp(-x))
@@ -50,10 +53,12 @@ def sigmoid(x):
 x = np.array([-1.0, 1.0, 2.0])
 print(sigmoid(x))
 
+
 # %% remind broadcast
 t = np.array([1.0, 2.0, 3.0])
 print(1.0 + t)
 print(1.0 / t)
+
 
 # %% plot sigmoid function
 x = np.arange(-5.0, 5.0, 0.1)
@@ -62,6 +67,7 @@ y = sigmoid(x)
 plt.plot(x, y)
 plt.ylim(-0.1, 1.1)
 plt.show()
+
 
 # %% plot step-function and sigmoid function
 x = np.arange(-5.0, 5.0, 0.1)
@@ -72,6 +78,7 @@ plt.plot(x, y1, label="sigmoid")
 plt.plot(x, y2, linestyle="--", label="step function")
 plt.ylim(-0.1, 1.1)
 plt.show()
+
 
 # %% relu
 def relu(x):

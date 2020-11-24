@@ -6,10 +6,12 @@ print(4 + 5)
 print(7 / 5)
 print(3 ** 2)
 
+
 # %% data type
 print(type(10))
 print(type(2.718))
 print(type("hello"))
+
 
 # %% variable
 x = 10
@@ -21,6 +23,7 @@ print(x)
 y = 3.14
 print(x * y)
 print(type(x * y))
+
 
 # %% list
 a = [1, 2, 3, 4, 5]
@@ -39,6 +42,7 @@ print(a[4])
 a[4] = 99
 print(a)
 
+
 # %% 리스트 계속
 print(a)
 
@@ -49,12 +53,14 @@ print(a[:3])  # 인덱스 0부터 3까지 (인덱스 3은 X)
 print(a[:-1])  # 처음부터 마지막 원소의 1개 앞까지
 print(a[:-2])  # 처음부터 마지막 원소의 2개 앞까지
 
+
 # %% 딕셔너리
 me = {"height": 100}
 print(me["height"])  # 원소 접근
 
 me["weight"] = 70  # 원소 추가
 print(me)
+
 
 # %% boolean
 hungry = True
@@ -70,6 +76,7 @@ print(hungry and sleepy)
 # OR 연산
 print(hungry or sleepy)
 
+
 # %% if statement
 hungry = True
 if hungry:
@@ -82,9 +89,11 @@ else:
     print("I'm not hungry")
     print("I'm sleepy")
 
+
 # %% for loop
 for i in [1, 2, 3]:
     print(i)
+
 
 # %% function
 def hello():
@@ -92,6 +101,7 @@ def hello():
 
 
 hello()
+
 
 # %% function continue
 def hello(object):

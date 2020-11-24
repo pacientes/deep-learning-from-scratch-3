@@ -11,6 +11,7 @@ print(t_train.shape)
 print(x_test.shape)
 print(t_test.shape)
 
+
 #%% function definition
 import numpy as np
 import pickle
@@ -70,6 +71,7 @@ for i in range(len(x)):
 
 print("Accuracy:" + str(float(accuracy_cnt) / len(x)))
 
+
 # %% batch
 x, _ = get_data()
 network = init_network()
@@ -80,6 +82,7 @@ print(x[0].shape)
 print(W1.shape)
 print(W2.shape)
 print(W3.shape)
+
 
 # %% apply batch
 x, t = get_data()
@@ -96,9 +99,11 @@ for i in range(0, len(x), batch_size):
 
 print("Accuracy:" + str(float(accuracy_cnt) / len(x)))
 
+
 # %% for loop - range step size
 print(list(range(0, 10)))
 print(list(range(0, 10, 3)))
+
 
 # %% argmax - axis
 x = np.array([[0.1, 0.8, 0.1], [0.3, 0.1, 0.6], [0.2, 0.5, 0.3], [0.8, 0.1, 0.1]])

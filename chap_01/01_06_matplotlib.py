@@ -10,6 +10,7 @@ y = np.sin(x)
 plt.plot(x, y)
 plt.show()
 
+
 # %% plot two graph in one plot
 x = np.arange(0, 6, 0.1)
 y1 = np.sin(x)
@@ -23,6 +24,7 @@ plt.ylabel("y")
 plt.title("sin & cos graph")
 plt.legend()
 plt.show()
+
 
 # %% show image
 from matplotlib.image import imread

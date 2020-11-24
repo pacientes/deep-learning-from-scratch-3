@@ -11,6 +11,7 @@ print(sum_exp_a)
 y = exp_a / sum_exp_a
 print(y)
 
+
 # %% define softmax function
 def softmax(a):
     exp_a = np.exp(a)
@@ -28,6 +29,7 @@ c = np.max(a)
 print(a - c)
 
 print(np.exp(a - c) / np.sum(np.exp(a - c)))
+
 
 # %% modified softmax function
 def softmax(a):
