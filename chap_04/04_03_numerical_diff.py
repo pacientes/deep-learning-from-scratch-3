@@ -53,7 +53,7 @@ def function_tmp(x1):
 print(numerical_diff(function_tmp, 4.0))
 
 
-# %% numerical gradient
+# %% numerical gradient, Chapter 4.4
 def numerical_gradient(f, x):
     h = 1e-4
     grad = np.zeros_like(x)
@@ -80,4 +80,83 @@ print(numerical_gradient(function_2, np.array([0.0, 2.0])))
 print(numerical_gradient(function_2, np.array([3.0, 0.0])))
 
 
+# %% gradient_descent
+def gradient_descent(f, init_x, lr=0.01, step_num=100):
+    x = init_x
+
+    for i in range(step_num):
+        grad = numerical_gradient(f, x)
+        x -= lr * grad
+
+    return x
+
+
+# %% sample gradient descent
+def function_2(x):
+    return x[0] ** 2 + x[1] ** 2
+
+
+init_x = np.array([-3.0, 4.0])
+gradient_descent(f=function_2, init_x=init_x, lr=0.1, step_num=100)
+# %% sample gradient descent 2
+
+# big learning rate
+init_x = np.array([-3.0, 4.0])
+ret = gradient_descent(f=function_2, init_x=init_x, lr=10.0, step_num=100)
+print(ret)
+
+# small learning rate
+init_x = np.array([-3.0, 4.0])
+ret = gradient_descent(f=function_2, init_x=init_x, lr=1e-10, step_num=100)
+print(ret)
+
+
+# %% simpleNet
+import sys, os
+
+sys.path.append(os.pardir)
+import numpy as np
+from common.functions import softmax, cross_entropy_error
+from common.gradient import numerical_gradient
+
+
+class simpleNet:
+    def __init__(self):
+        self.W = np.random.randn(2, 3)
+
+    def predict(self, x):
+        return np.dot(x, self.W)
+
+    def loss(self, x, t):
+        z = self.predict(x)
+        y = softmax(z)
+        loss = cross_entropy_error(y, t)
+
+        return loss
+
+
+# %% sample simpleNet
+net = simpleNet()
+print(net.W)  # weight
+
+x = np.array([0.6, 0.9])
+p = net.predict(x)
+print(p)
+
+maxIdx = np.argmax(p)
+print(maxIdx)  # maximum index
+
+# ground truth
+t = np.array([0, 0, 1])
+net.loss(x, t)
 # %%
+def f(W):
+    return net.loss(x, t)
+
+
+dW = gradient_descent(f, net.W)
+print(dW)
+# %% function to lambda
+
+f = lambda w: net.loss(x, t)
+dW = numerical_gradient(f, net.W)
