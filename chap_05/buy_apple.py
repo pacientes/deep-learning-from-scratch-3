@@ -1,12 +1,12 @@
-import layer_naive
+from layer_naive import MulLayer
 
 apple = 100
 apple_num = 2
 tax = 1.1
 
 # layers
-mul_apple_layer = layer_naive.MulLayer()
-mul_tax_layer = layer_naive.MulLayer()
+mul_apple_layer = MulLayer()
+mul_tax_layer = MulLayer()
 
 # forward
 apple_price = mul_apple_layer.forward(apple, apple_num)
