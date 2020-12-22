@@ -1,6 +1,26 @@
 import numpy as np
 import unittest  # 테스트 도구
 import weakref  # weak reference
+import contextlib
+
+
+class Config:
+    enable_backprop = True
+
+
+@contextlib.contextmanager
+def using_config(name, value):
+    old_value = getattr(Config, name)
+    setattr(Config, name, value)
+    try:
+        yield
+    finally:
+        setattr(Config, name, old_value)
+
+
+# 역전파 계산 비활성화 헬퍼 함수
+def no_grad():
+    return using_config("enable_backprop", False)
 
 
 class Variable:
@@ -76,12 +96,14 @@ class Function:
 
         outputs = [Variable(as_array(y)) for y in ys]
 
-        self.generation = max([x.generation for x in inputs])
-        for output in outputs:
-            output.set_creator(self)
-        self.inputs = inputs
-        self.outputs = [weakref.ref(output) for output in outputs]  # weak reference로 변환
-        # outputs에 원소가 하나라면, 리스트가 아닌 원소 자체를 반환
+        if Config.enable_backprop:
+            self.generation = max([x.generation for x in inputs])
+            for output in outputs:
+                output.set_creator(self)
+            self.inputs = inputs
+            self.outputs = [weakref.ref(output) for output in outputs]  # weak reference로 변환
+            # outputs에 원소가 하나라면, 리스트가 아닌 원소 자체를 반환
+
         return outputs if len(outputs) > 1 else outputs[0]
 
     def forward(self, xs):
@@ -145,3 +167,9 @@ y.backward()
 
 print(y.grad, t.grad)
 print(x0.grad, x1.grad)
+
+
+# with을 사용한 역전파 비활성 모드 전환
+with no_grad():
+    x = Variable(np.array(2.0))
+    y = square(x)
