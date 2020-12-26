@@ -265,7 +265,6 @@ class Div(Function):
         return y
 
     def backward(self, gy):
-
         x0, x1 = self.inputs
         gx0 = gy / x1
         gx1 = gy * (-x0 / x1 ** 2)
