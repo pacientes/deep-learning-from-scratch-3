@@ -196,12 +196,12 @@ def square(x):
 
 
 class Exp(Function):
-    def forward(self, xs):
-        return np.exp(xs)
+    def forward(self, x):
+        return np.exp(x)
 
     def backward(self, gy):
-        x = self.input.data
-        gx = np.exp(x) * gy
+        y = self.outputs[0]()  # weakref
+        gx = gy * y
         return gx
 
 

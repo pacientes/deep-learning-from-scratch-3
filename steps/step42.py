@@ -38,3 +38,9 @@ for i in range(iters):
     b.data -= lr * b.grad.data
 
     print(W, b, loss)
+
+
+print(3 // 2)
+print("안녕하세요"[:3])
+
+print("{} {} {}".format(52, type(273)))
