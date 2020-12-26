@@ -17,7 +17,7 @@ logs = [y.data]
 for i in range(3):
     logs.append(x.grad.data)
     gx = x.grad
-    x.cleargard()
+    x.cleargrad()
     gx.backward(create_graph=True)
 
 # 그래프 그리기

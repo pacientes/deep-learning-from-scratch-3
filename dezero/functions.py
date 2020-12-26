@@ -3,7 +3,10 @@ import dezero
 
 from dezero import utils
 from dezero.core import Function, Variable, as_variable, as_array
-from dezero.core import exp
+
+# =============================================================================
+# Basic functions: sin / cos / tanh / exp / log
+# =============================================================================
 
 
 class Sin(Function):
@@ -51,6 +54,26 @@ def tanh(x):
     return Tanh()(x)
 
 
+class Exp(Function):
+    def forward(self, x):
+        return np.exp(x)
+
+    def backward(self, gy):
+        y = self.outputs[0]()  # weakref
+        gx = gy * y
+        return gx
+
+
+# 클래스 생성 편의함수
+def exp(x):
+    return Exp()(x)
+
+
+# =============================================================================
+# Tensor operations: reshape / transpose / get_item / expand_dims / flatten
+# =============================================================================
+
+
 class Reshape(Function):
     def __init__(self, shape) -> None:
         self.shape = shape
@@ -91,6 +114,11 @@ def transpose(x, axes=None):
     return Transpose(axes)(x)
 
 
+# =============================================================================
+# sum / sum_to / broadcast_to / average / matmul / linear
+# =============================================================================
+
+
 class Sum(Function):
     def __init__(self, axis, keepdims) -> None:
         self.axis = axis
@@ -109,26 +137,6 @@ class Sum(Function):
 
 def sum(x, axis=None, keepdims=False):
     return Sum(axis, keepdims)(x)
-
-
-class BroadcastTo(Function):
-    def __init__(self, shape) -> None:
-        self.shape = shape
-
-    def forward(self, x):
-        self.x_shape = x.shape
-        y = np.broadcast_to(x, self.shape)
-        return y
-
-    def backward(self, gy):
-        gx = sum_to(gy, self.x_shape)
-        return gx
-
-
-def broadcast_to(x, shape):
-    if x.shape == shape:
-        return as_variable(x)
-    return BroadcastTo(shape)(x)
 
 
 class SumTo(Function):
@@ -151,6 +159,26 @@ def sum_to(x, shape):
     return SumTo(shape)(x)
 
 
+class BroadcastTo(Function):
+    def __init__(self, shape) -> None:
+        self.shape = shape
+
+    def forward(self, x):
+        self.x_shape = x.shape
+        y = np.broadcast_to(x, self.shape)
+        return y
+
+    def backward(self, gy):
+        gx = sum_to(gy, self.x_shape)
+        return gx
+
+
+def broadcast_to(x, shape):
+    if x.shape == shape:
+        return as_variable(x)
+    return BroadcastTo(shape)(x)
+
+
 class MatMul(Function):
     def forward(self, x, W):
         y = x.dot(W)
@@ -167,6 +195,66 @@ def matmul(x, W):
     return MatMul()(x, W)
 
 
+class Linear(Function):
+    def forward(self, x, W, b=None):
+        y = x.dot(W)
+        if b is not None:
+            y += b
+        return y
+
+    def backward(self, gy):
+        x, W, b = self.inputs
+        gb = None if b.data is None else sum_to(gy, b.shape)
+        gx = matmul(gy, W.T)
+        gW = matmul(x.T, gy)
+        return gx, gW, gb
+
+
+def linear(x, W, b=None):
+    return Linear()(x, W, b)
+
+
+def linear_simple(x, W, b=None):
+    t = matmul(x, W)
+    if b is None:
+        return t
+
+    y = t + b
+    t.data = None  # Release t.data (ndarray) for memory efficiency
+    return y
+
+
+# =============================================================================
+# activation function: sigmoid / relu / softmax / log_softmax / leaky_relu
+# =============================================================================
+
+
+class Sigmoid(Function):
+    def forward(self, x):
+        y = 1 / (1 + np.exp(-x))
+        return y
+
+    def backward(self, gy):
+        y = self.outputs[0]()
+        gx = gy * y * (1 - y)
+        return gx
+
+
+def sigmoid(x):
+    return Sigmoid()(x)
+
+
+def sigmoid_simple(x):
+    x = as_variable(x)
+    y = 1 / (1 + exp(-x))
+    return y
+
+
+# =============================================================================
+# loss function: mean_squared_error / softmax_cross_entropy / sigmoid_cross_entropy / binary_cross_entropy
+# =============================================================================
+
+
 class MeanSquareError(Function):
     def forward(self, x0, x1):
         diff = x0 - x1
@@ -181,21 +269,5 @@ class MeanSquareError(Function):
         return gx0, gx1
 
 
-def mean_square_error(x0, x1):
+def mean_squared_error(x0, x1):
     return MeanSquareError()(x0, x1)
-
-
-def linear_simple(x, W, b=None):
-    t = matmul(x, W)
-    if b is None:
-        return t
-
-    y = t + b
-    t.data = None  # Release t.data (ndarray) for memory efficiency
-    return y
-
-
-def sigmoid_simple(x):
-    x = as_variable(x)
-    y = 1 / (1 + exp(-x))
-    return y

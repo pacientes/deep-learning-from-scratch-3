@@ -25,7 +25,7 @@ for i in range(iters):
     print(i, x)
 
     y = f(x)
-    x.cleargard()
+    x.cleargrad()
     y.backward()
 
     x.data -= x.grad / gx2(x.data)

@@ -38,7 +38,7 @@ class Variable:
                 if x.creator is not None:
                     funcs.append(x.creator)
 
-    def cleargard(self):
+    def cleargrad(self):
         self.grad = None
 
 
@@ -124,7 +124,7 @@ y.backward()
 print(x.grad)
 
 
-x.cleargard()  # 두 번째 계산 시 값 초기화
+x.cleargrad()  # 두 번째 계산 시 값 초기화
 y = add(add(x, x), x)
 y.backward()
 

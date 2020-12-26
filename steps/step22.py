@@ -91,7 +91,7 @@ class Variable:
                 for y in f.outputs:
                     y().grad = None  # y는 약한 참조(weak_ref)
 
-    def cleargard(self):
+    def cleargrad(self):
         self.grad = None
 
     @property

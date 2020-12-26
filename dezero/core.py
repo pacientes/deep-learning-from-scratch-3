@@ -4,19 +4,6 @@ import contextlib
 import dezero
 
 
-def setup_variable():
-    Variable.__add__ = add
-    Variable.__radd__ = add
-    Variable.__mul__ = mul
-    Variable.__rmul__ = mul
-    Variable.__neg__ = neg
-    Variable.__sub__ = sub
-    Variable.__rsub__ = rsub
-    Variable.__truediv__ = div
-    Variable.__rtruediv__ = rdiv
-    Variable.__pow__ = pow
-
-
 class Config:
     enable_backprop = True
 
@@ -34,6 +21,11 @@ def using_config(name, value):
 # 역전파 계산 비활성화 헬퍼 함수
 def no_grad():
     return using_config("enable_backprop", False)
+
+
+# =============================================================================
+# Variable / Function
+# =============================================================================
 
 
 class Variable:
@@ -106,7 +98,7 @@ class Variable:
                 for y in f.outputs:
                     y().grad = None  # y는 약한 참조(weak_ref)
 
-    def cleargard(self):
+    def cleargrad(self):
         self.grad = None
 
     def reshape(self, *shape):
@@ -135,6 +127,10 @@ class Variable:
     @property
     def T(self):
         return dezero.functions.transpose(self)
+
+
+class Parameter(Variable):
+    pass
 
 
 # Variable 객체로 만드는 편의함수
@@ -180,34 +176,9 @@ class Function:
         raise NotImplementedError
 
 
-class Square(Function):
-    def forward(self, xs):
-        return xs ** 2
-
-    def backward(self, gy):
-        x = self.inputs[0].data
-        gx = 2 * x * gy
-        return gx
-
-
-# 클래스 생성 편의함수
-def square(x):
-    return Square()(x)
-
-
-class Exp(Function):
-    def forward(self, x):
-        return np.exp(x)
-
-    def backward(self, gy):
-        y = self.outputs[0]()  # weakref
-        gx = gy * y
-        return gx
-
-
-# 클래스 생성 편의함수
-def exp(x):
-    return Exp()(x)
+# =============================================================================
+# 사칙연산 / 연산자 오버로드
+# =============================================================================
 
 
 class Add(Function):
@@ -287,6 +258,21 @@ def rsub(x0, x1):
     return Sub()(x1, x0)
 
 
+class Square(Function):
+    def forward(self, xs):
+        return xs ** 2
+
+    def backward(self, gy):
+        x = self.inputs[0].data
+        gx = 2 * x * gy
+        return gx
+
+
+# 클래스 생성 편의함수
+def square(x):
+    return Square()(x)
+
+
 class Div(Function):
     def forward(self, x0, x1):
         y = x0 / x1
@@ -329,3 +315,16 @@ class Pow(Function):
 
 def pow(x, c):
     return Pow(c)(x)
+
+
+def setup_variable():
+    Variable.__add__ = add
+    Variable.__radd__ = add
+    Variable.__mul__ = mul
+    Variable.__rmul__ = mul
+    Variable.__neg__ = neg
+    Variable.__sub__ = sub
+    Variable.__rsub__ = rsub
+    Variable.__truediv__ = div
+    Variable.__rtruediv__ = rdiv
+    Variable.__pow__ = pow

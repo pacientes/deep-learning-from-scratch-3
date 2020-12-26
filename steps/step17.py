@@ -51,7 +51,7 @@ class Variable:
                 if x.creator is not None:
                     add_func(x.creator)
 
-    def cleargard(self):
+    def cleargrad(self):
         self.grad = None
 
 

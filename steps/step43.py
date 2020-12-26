@@ -21,9 +21,9 @@ b2 = Variable(np.zeros(O))
 
 # 신경망 추론
 def predict(x):
-    y = F.linear_simple(x, W1, b1)
-    y = F.sigmoid_simple(y)
-    y = F.linear_simple(y, W2, b2)
+    y = F.linear(x, W1, b1)
+    y = F.sigmoid(y)
+    y = F.linear(y, W2, b2)
     return y
 
 
@@ -33,12 +33,12 @@ iters = 10000
 # 신경망 학습
 for i in range(iters):
     y_pred = predict(x)
-    loss = F.mean_square_error(y, y_pred)
+    loss = F.mean_squared_error(y, y_pred)
 
-    W1.cleargard()
-    b1.cleargard()
-    W2.cleargard()
-    b2.cleargard()
+    W1.cleargrad()
+    b1.cleargrad()
+    W2.cleargrad()
+    b2.cleargrad()
     loss.backward()
 
     W1.data -= lr * W1.grad.data

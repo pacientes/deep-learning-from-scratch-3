@@ -18,7 +18,7 @@ iters = 0
 
 for i in range(iters):
     gx = x.grad
-    x.cleargard()
+    x.cleargrad()
     gx.backward(create_graph=True)
 
 # 계산 그래프 그리기

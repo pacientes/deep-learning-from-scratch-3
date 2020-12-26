@@ -28,10 +28,10 @@ iters = 100
 
 for i in range(iters):
     y_pred = predict(x)
-    loss = F.mean_square_error(y, y_pred)
+    loss = F.mean_squared_error(y, y_pred)
 
-    W.cleargard()
-    b.cleargard()
+    W.cleargrad()
+    b.cleargrad()
     loss.backward()
 
     W.data -= lr * W.grad.data

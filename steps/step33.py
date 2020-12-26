@@ -18,7 +18,7 @@ def f(x):
 # print(x.grad)
 
 # gx = x.grad
-# x.cleargard()
+# x.cleargrad()
 # gx.backward()
 # print(x.grad)
 
@@ -29,11 +29,11 @@ for i in range(iters):
     print(i, x)
 
     y = f(x)
-    x.cleargard()
+    x.cleargrad()
     y.backward(create_graph=True)
 
     gx = x.grad
-    x.cleargard()
+    x.cleargrad()
     gx.backward()
     gx2 = x.grad
 
