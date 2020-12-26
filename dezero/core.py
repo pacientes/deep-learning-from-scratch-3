@@ -117,6 +117,9 @@ class Variable:
     def transpose(self):
         return dezero.functions.transpose(self)
 
+    def sum(self, axis=None, keepdims=None):
+        return dezero.funtions.sum(self, axis, keepdims)
+
     @property
     def shape(self):
         return self.data.shape
