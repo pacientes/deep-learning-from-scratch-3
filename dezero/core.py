@@ -39,7 +39,7 @@ def no_grad():
 class Variable:
     __array_priority__ = 200
 
-    def __init__(self, data, name=None) -> None:
+    def __init__(self, data, name=None):
         # 데이터 입력 타입 강제화
         if data is not None:
             if not isinstance(data, np.ndarray):
