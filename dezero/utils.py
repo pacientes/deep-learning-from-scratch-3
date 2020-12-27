@@ -126,11 +126,10 @@ def reshape_sum_backward(gy, x_shape, axis, keepdims):
 
 
 def logsumexp(x, axis=1):
-    x = as_variable(x)
     m = x.max(axis=axis, keepdims=True)
     y = x - m
-    x.exp(y, out=y)
+    np.exp(y, out=y)
     s = y.sum(axis=axis, keepdims=True)
-    x.log(s, out=s)
+    np.log(s, out=s)
     m += s
     return m
