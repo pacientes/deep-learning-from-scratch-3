@@ -226,3 +226,117 @@ class Deconv2d(Layer):
 
         y = F.deconv2d(x, self.W, self.b, self.stride, self.pad)
         return y
+
+
+# =============================================================================
+# RNN / LSTM
+# =============================================================================
+class RNN(Layer):
+    def __init__(self, hidden_size, in_size=None):
+        """An Elman RNN with tanh.
+        Args:
+            hidden_size (int): The number of features in the hidden state.
+            in_size (int): The number of features in the input. If unspecified
+            or `None`, parameter initialization will be deferred until the
+            first `__call__(x)` at which time the size will be determined.
+        """
+        super().__init__()
+        self.x2h = Linear(hidden_size, in_size=in_size)
+        self.h2h = Linear(hidden_size, in_size=in_size, nobias=True)
+        self.h = None
+
+    def reset_state(self):
+        self.h = None
+
+    def forward(self, x):
+        if self.h is None:
+            h_new = F.tanh(self.x2h(x))
+        else:
+            h_new = F.tanh(self.x2h(x) + self.h2h(self.h))
+        self.h = h_new
+        return h_new
+
+
+class LSTM(Layer):
+    def __init__(self, hidden_size, in_size=None):
+        super().__init__()
+
+        H, I = hidden_size, in_size
+        self.x2f = Linear(H, in_size=I)
+        self.x2i = Linear(H, in_size=I)
+        self.x2o = Linear(H, in_size=I)
+        self.x2u = Linear(H, in_size=I)
+        self.h2f = Linear(H, in_size=H, nobias=True)
+        self.h2i = Linear(H, in_size=H, nobias=True)
+        self.h2o = Linear(H, in_size=H, nobias=True)
+        self.h2u = Linear(H, in_size=H, nobias=True)
+        self.reset_state()
+
+    def reset_state(self):
+        self.h = None
+        self.c = None
+
+    def forward(self, x):
+        if self.h is None:
+            f = F.sigmoid(self.x2f(x))
+            i = F.sigmoid(self.x2i(x))
+            o = F.sigmoid(self.x2o(x))
+            u = F.tanh(self.x2u(x))
+        else:
+            f = F.sigmoid(self.x2f(x) + self.h2f(self.h))
+            i = F.sigmoid(self.x2i(x) + self.h2i(self.h))
+            o = F.sigmoid(self.x2o(x) + self.h2o(self.h))
+            u = F.tanh(self.x2u(x) + self.h2u(self.h))
+
+        if self.c is None:
+            c_new = i * u
+        else:
+            c_new = (f * self.c) + (i * u)
+
+        h_new = o * F.tanh(c_new)
+
+        self.h, self.c = h_new, c_new
+        return h_new
+
+
+# =============================================================================
+# EmbedID / BatchNorm
+# =============================================================================
+class EmbedID(Layer):
+    def __init__(self, in_size, out_size):
+        super().__init__()
+        self.W = Parameter(np.random.randn(in_size, out_size), name="W")
+
+    def __call__(self, x):
+        y = self.W[x]
+        return y
+
+
+class BatchNorm(Layer):
+    def __init__(self):
+        super().__init__()
+        # `.avg_mean` and `.avg_var` are `Parameter` objects, so they will be
+        # saved to a file (using `save_weights()`).
+        # But they don't need grads, so they're just used as `ndarray`.
+        self.avg_mean = Parameter(None, name="avg_mean")
+        self.avg_var = Parameter(None, name="avg_var")
+        self.gamma = Parameter(None, name="gamma")
+        self.beta = Parameter(None, name="beta")
+
+    def _init_params(self, x):
+        xp = cuda.get_array_module(x)
+        D = x.shape[1]
+        if self.avg_mean.data is None:
+            self.avg_mean.data = xp.zeros(D, dtype=x.dtype)
+        if self.avg_var.data is None:
+            self.avg_var.data = xp.ones(D, dtype=x.dtype)
+        if self.gamma.data is None:
+            self.gamma.data = xp.ones(D, dtype=x.dtype)
+        if self.beta.data is None:
+            self.beta.data = xp.zeros(D, dtype=x.dtype)
+
+    def __call__(self, x):
+        if self.avg_mean.data is None:
+            self._init_params(x)
+        return F.batch_nrom(x, self.gamma, self.beta, self.avg_mean.data, self.avg_var.data)
+
