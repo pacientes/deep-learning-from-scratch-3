@@ -73,8 +73,6 @@ class Variable:
     # 계산 효율을 위해 재귀 -> 반복문 방식으로 고친다.
     def backward(self, retain_grad=False, create_graph=False):
         if self.grad is None:
-            # self.grad = np.ones_like(self.data)
-            # 역전파의 계산 그래프를 만들어 연결한다.
             xp = dezero.cuda.get_array_module(self.data)
             self.grad = Variable(xp.ones_like(self.data))
 
@@ -88,13 +86,12 @@ class Variable:
                 funcs.sort(key=lambda x: x.generation)
 
         add_func(self.creator)
-
         while funcs:
-            f = funcs.pop()  # 함수를 가져온다.
-            gys = [output().grad for output in f.outputs]  # weak reference로 변환
+            f = funcs.pop()
+            gys = [output().grad for output in f.outputs]  # output is weakref
 
             with using_config("enable_backprop", create_graph):
-                gxs = f.backward(*gys)  # 메인 backward
+                gxs = f.backward(*gys)
                 if not isinstance(gxs, tuple):
                     gxs = (gxs,)
 
@@ -102,14 +99,14 @@ class Variable:
                     if x.grad is None:
                         x.grad = gx
                     else:
-                        x.grad = x.grad + gx  # 이 계산도 대상
+                        x.grad = x.grad + gx
 
                     if x.creator is not None:
                         add_func(x.creator)
 
             if not retain_grad:
                 for y in f.outputs:
-                    y().grad = None  # y는 약한 참조(weak_ref)
+                    y().grad = None  # y is weakref
 
     def cleargrad(self):
         self.grad = None
@@ -119,8 +116,13 @@ class Variable:
             shape = shape[0]
         return dezero.functions.reshape(self, shape)
 
-    def transpose(self):
-        return dezero.functions.transpose(self)
+    def transpose(self, *axes):
+        if len(axes) == 0:
+            axes = None
+        elif len(axes) == 1:
+            if isinstance(axes[0], (tuple, list)) or axes[0] is None:
+                axes = axes[0]
+        return dezero.functions.transpose(self, axes)
 
     def sum(self, axis=None, keepdims=None):
         return dezero.functions.sum(self, axis, keepdims)

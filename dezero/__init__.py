@@ -28,6 +28,7 @@ else:
     import dezero.dataloaders
     import dezero.optimizers
     import dezero.functions
+    import dezero.functions_conv
     import dezero.layers
     import dezero.utils
     import dezero.cuda
