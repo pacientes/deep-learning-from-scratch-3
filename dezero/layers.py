@@ -72,6 +72,7 @@ class Layer:
             raise
 
     def load_weights(self, path):
+        print("Path:", path)
         npz = np.load(path)
         params_dict = {}
         self._flatten_params(params_dict)
