@@ -445,6 +445,15 @@ def clip(x, x_min, x_max):
     return Clip(x_min, x_max)(x)
 
 
+def accuracy(y, t):
+    y, t = as_variable(y), as_variable(t)
+
+    pred = y.data.argmax(axis=1).reshape(t.shape)
+    result = pred == t.data
+    acc = result.mean()
+    return Variable(as_array(acc))
+
+
 from dezero.core import add
 from dezero.core import sub
 from dezero.core import rsub

@@ -6,7 +6,6 @@ if "__file__" in globals():
 import math
 import dezero
 import numpy as np
-import matplotlib.pyplot as plt
 
 from dezero import optimizers
 import dezero.functions as F
