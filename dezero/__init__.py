@@ -24,5 +24,6 @@ else:
     import dezero.utils
     import dezero.optimizers
     import dezero.datasets
+    import dezero.transform
 
 setup_variable()
