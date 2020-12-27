@@ -23,5 +23,6 @@ else:
     import dezero.layers
     import dezero.utils
     import dezero.optimizers
+    import dezero.datasets
 
 setup_variable()
