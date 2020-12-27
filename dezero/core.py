@@ -6,6 +6,7 @@ import dezero
 
 class Config:
     enable_backprop = True
+    train = True
 
 
 @contextlib.contextmanager
@@ -16,6 +17,10 @@ def using_config(name, value):
         yield
     finally:
         setattr(Config, name, old_value)
+
+
+def test_mode():
+    return using_config("train", False)
 
 
 # 역전파 계산 비활성화 헬퍼 함수
