@@ -2,6 +2,8 @@ import numpy as np
 import dezero
 
 from dezero import utils
+from dezero import cuda
+
 from dezero.core import Function, Variable, as_variable, as_array
 
 # =============================================================================
@@ -11,7 +13,8 @@ from dezero.core import Function, Variable, as_variable, as_array
 
 class Sin(Function):
     def forward(self, x):
-        y = np.sin(x)
+        xp = cuda.get_array_module(x)
+        y = xp.sin(x)
         return y
 
     def backward(self, gy):
@@ -26,7 +29,8 @@ def sin(x):
 
 class Cos(Function):
     def forward(self, x):
-        y = np.cos(x)
+        xp = cuda.get_array_module(x)
+        y = xp.cos(x)
         return y
 
     def backward(self, gy):
@@ -41,12 +45,13 @@ def cos(x):
 
 class Tanh(Function):
     def forward(self, x):
-        y = np.tanh(x)
+        xp = cuda.get_array_module(x)
+        y = xp.tanh(x)
         return y
 
     def backward(self, gy):
-        y = self.outputs[0]()
-        gx = gy * (1 - y ** 2)
+        y = self.outputs[0]()  # weakref
+        gx = gy * (1 - y * y)
         return gx
 
 
@@ -56,7 +61,9 @@ def tanh(x):
 
 class Exp(Function):
     def forward(self, x):
-        return np.exp(x)
+        xp = cuda.get_array_module(x)
+        y = xp.exp(x)
+        return y
 
     def backward(self, gy):
         y = self.outputs[0]()  # weakref
@@ -64,14 +71,14 @@ class Exp(Function):
         return gx
 
 
-# 클래스 생성 편의함수
 def exp(x):
     return Exp()(x)
 
 
 class Log(Function):
     def forward(self, x):
-        y = np.log(x)
+        xp = cuda.get_array_module(x)
+        y = xp.log(x)
         return y
 
     def backward(self, gy):
@@ -90,7 +97,7 @@ def log(x):
 
 
 class Reshape(Function):
-    def __init__(self, shape) -> None:
+    def __init__(self, shape):
         self.shape = shape
 
     def forward(self, x):
@@ -104,7 +111,7 @@ class Reshape(Function):
 
 def reshape(x, shape):
     if x.shape == shape:
-        return as_array(x)
+        return as_variable(x)
     return Reshape(shape)(x)
 
 
@@ -130,13 +137,18 @@ def transpose(x, axes=None):
 
 
 class GetItemGrad(Function):
-    def __init__(self, slices, in_shape) -> None:
+    def __init__(self, slices, in_shape):
         self.slices = slices
-        self.in_shpae = in_shape
+        self.in_shape = in_shape
 
     def forward(self, gy):
-        gx = np.zeros(self.in_shpae)
-        np.add.at(gx, self.slices, gy)
+        xp = cuda.get_array_module(gy)
+        gx = xp.zeros(self.in_shape, dtype=gy.dtype)
+
+        if xp is np:
+            np.add.at(gx, self.slices, gy)
+        else:
+            xp.scatter_add(gx, self.slices, gy)
         return gx
 
     def backward(self, ggx):
@@ -144,7 +156,7 @@ class GetItemGrad(Function):
 
 
 class GetItem(Function):
-    def __init__(self, slices) -> None:
+    def __init__(self, slices):
         self.slices = slices
 
     def forward(self, x):
@@ -161,13 +173,25 @@ def get_item(x, slices):
     return GetItem(slices)(x)
 
 
+def expand_dims(x, axis):
+    x = as_variable(x)
+    shape = list(x.shape)
+    shape.insert(axis, 1)
+    return reshape(x, tuple(shape))
+
+
+def flatten(x):
+    """Flattens the input. Does not affect the batch size."""
+    return reshape(x, (x.shape[0], -1))
+
+
 # =============================================================================
 # sum / sum_to / broadcast_to / average / matmul / linear
 # =============================================================================
 
 
 class Sum(Function):
-    def __init__(self, axis, keepdims) -> None:
+    def __init__(self, axis, keepdims):
         self.axis = axis
         self.keepdims = keepdims
 
@@ -187,7 +211,7 @@ def sum(x, axis=None, keepdims=False):
 
 
 class SumTo(Function):
-    def __init__(self, shape) -> None:
+    def __init__(self, shape):
         self.shape = shape
 
     def forward(self, x):
@@ -207,12 +231,13 @@ def sum_to(x, shape):
 
 
 class BroadcastTo(Function):
-    def __init__(self, shape) -> None:
+    def __init__(self, shape):
         self.shape = shape
 
     def forward(self, x):
         self.x_shape = x.shape
-        y = np.broadcast_to(x, self.shape)
+        xp = cuda.get_array_module(x)
+        y = xp.broadcast_to(x, self.shape)
         return y
 
     def backward(self, gy):
@@ -224,6 +249,15 @@ def broadcast_to(x, shape):
     if x.shape == shape:
         return as_variable(x)
     return BroadcastTo(shape)(x)
+
+
+def average(x, axis=None, keepdims=False):
+    x = as_variable(x)
+    y = sum(x, axis, keepdims)
+    return y * (y.data.size / x.data.size)
+
+
+mean = average
 
 
 class MatMul(Function):
@@ -243,7 +277,7 @@ def matmul(x, W):
 
 
 class Linear(Function):
-    def forward(self, x, W, b=None):
+    def forward(self, x, W, b):
         y = x.dot(W)
         if b is not None:
             y += b
@@ -278,7 +312,9 @@ def linear_simple(x, W, b=None):
 
 class Sigmoid(Function):
     def forward(self, x):
-        y = 1 / (1 + np.exp(-x))
+        xp = cuda.get_array_module(x)
+        # y = 1 / (1 + xp.exp(-x))
+        y = xp.tanh(x * 0.5) * 0.5 + 0.5  # Better implementation
         return y
 
     def backward(self, gy):
@@ -299,7 +335,8 @@ def sigmoid_simple(x):
 
 class ReLU(Function):
     def forward(self, x):
-        y = np.maximum(x, 0.0)
+        xp = cuda.get_array_module(x)
+        y = xp.maximum(x, 0.0)
         return y
 
     def backward(self, gy):
@@ -318,7 +355,9 @@ class Softmax(Function):
         self.axis = axis
 
     def forward(self, x):
-        y = np.exp(x)
+        xp = cuda.get_array_module(x)
+        y = x - x.max(axis=self.axis, keepdims=True)
+        y = xp.exp(y)
         y /= y.sum(axis=self.axis, keepdims=True)
         return y
 
@@ -341,12 +380,59 @@ def softmax_simple(x, axis=1):
     return y / sum_y
 
 
+class LogSoftmax(Function):
+    def __init__(self, axis=1):
+        self.axis = axis
+
+    def forward(self, x):
+        log_z = utils.logsumexp(x, self.axis)
+        y = x - log_z
+        return y
+
+    def backward(self, gy):
+        y = self.outputs[0]()
+        gx = gy - exp(y) * gy.sum(axis=self.axis, keepdims=True)
+        return gx
+
+
+def log_softmax(x, axis=1):
+    return LogSoftmax(axis)(x)
+
+
+class LeakyReLU(Function):
+    def __init__(self, slope):
+        self.slope = slope
+
+    def forward(self, x):
+        y = x.copy()
+        y[x <= 0] *= self.slope
+        return y
+
+    def backward(self, gy):
+        (x,) = self.inputs
+        mask = (x.data > 0).astype(gy.dtype)
+        mask[mask <= 0] = self.slope
+        gx = gy * mask
+        return gx
+
+
+def leaky_relu(x, slope=0.2):
+    return LeakyReLU(slope)(x)
+
+
 # =============================================================================
 # loss function: mean_squared_error / softmax_cross_entropy / sigmoid_cross_entropy / binary_cross_entropy
 # =============================================================================
 
 
-class MeanSquareError(Function):
+def mean_squared_error_simple(x0, x1):
+    x0, x1 = as_variable(x0), as_variable(x1)
+    diff = x0 - x1
+    y = sum(diff ** 2) / len(diff)
+    return y
+
+
+class MeanSquaredError(Function):
     def forward(self, x0, x1):
         diff = x0 - x1
         y = (diff ** 2).sum() / len(diff)
@@ -361,7 +447,7 @@ class MeanSquareError(Function):
 
 
 def mean_squared_error(x0, x1):
-    return MeanSquareError()(x0, x1)
+    return MeanSquaredError()(x0, x1)
 
 
 def softmax_cross_entropy_simple(x, t):
@@ -391,14 +477,36 @@ class SoftmaxCrossEntropy(Function):
         gy *= 1 / N
         y = softmax(x)
         # convert to one-hot
-        # xp = cuda.get_array_module(t.data)
-        t_onehot = np.eye(CLS_NUM)[t.data]
+        xp = cuda.get_array_module(t.data)
+        t_onehot = xp.eye(CLS_NUM, dtype=t.dtype)[t.data]
         y = (y - t_onehot) * gy
         return y
 
 
 def softmax_cross_entropy(x, t):
     return SoftmaxCrossEntropy()(x, t)
+
+
+def sigmoid_cross_entropy(x, t):
+    if x.ndim != t.ndim:
+        t = t.reshape(*x.shape)
+    x, t = as_variable(x), as_variable(t)
+    N = len(x)
+    p = sigmoid(x)
+    p = clip(p, 1e-15, 1.0)
+    tlog_p = t * log(p) + (1 - t) * log(1 - p)
+    y = -1 * sum(tlog_p) / N
+    return y
+
+
+def binary_cross_entropy(p, t):
+    if p.ndim != t.ndim:
+        t = t.reshape(*p.shape)
+    N = len(t)
+    p = clip(p, 1e-15, 0.999)
+    tlog_p = t * log(p) + (1 - t) * log(1 - p)
+    y = -1 * sum(tlog_p) / N
+    return y
 
 
 # =============================================================================

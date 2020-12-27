@@ -10,7 +10,6 @@ import dezero.functions as F
 from dezero import DataLoader
 from dezero.models import MLP
 from dezero.optimizers import SGD
-import optimizers
 
 # MNIST 데이터 학습하기
 
@@ -27,7 +26,6 @@ test_loader = DataLoader(test_set, batch_size, shuffle=False)
 # model = MLP((hidden_size, 10))
 model = MLP((hidden_size, hidden_size, 10), activation=F.relu)
 optimizer = SGD().setup(model)
-optimizer = 
 
 for epoch in range(max_epoch):
     sum_loss, sum_acc = 0, 0

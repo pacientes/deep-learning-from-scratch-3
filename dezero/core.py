@@ -27,6 +27,13 @@ def no_grad():
 # Variable / Function
 # =============================================================================
 
+try:
+    import cupy
+
+    array_type = (np.ndarray, cupy.ndarray)
+except ImportError:
+    array_type = np.ndarray
+
 
 class Variable:
     __array_priority__ = 200
@@ -34,7 +41,7 @@ class Variable:
     def __init__(self, data, name=None):
         # 데이터 입력 타입 강제화
         if data is not None:
-            if not isinstance(data, np.ndarray):
+            if not isinstance(data, array_type):
                 raise TypeError(f"{type(data)}는 지원하지 않습니다.")
 
         self.data = data
@@ -63,7 +70,8 @@ class Variable:
         if self.grad is None:
             # self.grad = np.ones_like(self.data)
             # 역전파의 계산 그래프를 만들어 연결한다.
-            self.grad = Variable(np.ones_like(self.data))
+            xp = dezero.cuda.get_array_module(self.data)
+            self.grad = Variable(xp.ones_like(self.data))
 
         funcs = []
         seen_set = set()
@@ -112,6 +120,14 @@ class Variable:
     def sum(self, axis=None, keepdims=None):
         return dezero.functions.sum(self, axis, keepdims)
 
+    def to_cpu(self):
+        if self.data is not None:
+            self.data = dezero.cuda.as_numpy(self.data)
+
+    def to_gpu(self):
+        if self.data is not None:
+            self.data = dezero.cuda.as_cupy(self.data)
+
     @property
     def shape(self):
         return self.data.shape
@@ -123,6 +139,10 @@ class Variable:
     @property
     def ndim(self):
         return self.data.ndim
+
+    @property
+    def dtype(self):
+        return self.data.dtype
 
     @property
     def T(self):
@@ -141,14 +161,13 @@ def as_variable(obj):
 
 
 # 타입 변환 편의함수
-def as_array(x):
+def as_array(x, array_module=np):
     if np.isscalar(x):
-        return np.array(x)
+        return array_module.array(x)
     return x
 
 
 class Function:
-    # 가변 길이 인수 전달
     def __call__(self, *inputs):
         inputs = [as_variable(x) for x in inputs]
 
@@ -156,7 +175,6 @@ class Function:
         ys = self.forward(*xs)
         if not isinstance(ys, tuple):
             ys = (ys,)
-
         outputs = [Variable(as_array(y)) for y in ys]
 
         if Config.enable_backprop:
@@ -164,16 +182,15 @@ class Function:
             for output in outputs:
                 output.set_creator(self)
             self.inputs = inputs
-            self.outputs = [weakref.ref(output) for output in outputs]  # weak reference로 변환
-            # outputs에 원소가 하나라면, 리스트가 아닌 원소 자체를 반환
+            self.outputs = [weakref.ref(output) for output in outputs]
 
         return outputs if len(outputs) > 1 else outputs[0]
 
     def forward(self, xs):
-        raise NotImplementedError
+        raise NotImplementedError()
 
-    def backward(self, gy):
-        raise NotImplementedError
+    def backward(self, gys):
+        raise NotImplementedError()
 
 
 # =============================================================================
@@ -189,15 +206,14 @@ class Add(Function):
 
     def backward(self, gy):
         gx0, gx1 = gy, gy
-        if self.x0_shape != self.x1_shape:
+        if self.x0_shape != self.x1_shape:  # for broadcaset
             gx0 = dezero.functions.sum_to(gx0, self.x0_shape)
             gx1 = dezero.functions.sum_to(gx1, self.x1_shape)
         return gx0, gx1
 
 
-# 클래스 생성 편의함수
 def add(x0, x1):
-    x1 = as_array(x1)
+    x1 = as_array(x1, dezero.cuda.get_array_module(x0.data))
     return Add()(x0, x1)
 
 
@@ -217,7 +233,7 @@ class Mul(Function):
 
 
 def mul(x0, x1):
-    x1 = as_array(x1)
+    x1 = as_array(x1, dezero.cuda.get_array_module(x0.data))
     return Mul()(x0, x1)
 
 
@@ -249,28 +265,13 @@ class Sub(Function):
 
 
 def sub(x0, x1):
-    x1 = as_array(x1)
+    x1 = as_array(x1, dezero.cuda.get_array_module(x0.data))
     return Sub()(x0, x1)
 
 
 def rsub(x0, x1):
-    x1 = as_array(x1)
+    x1 = as_array(x1, dezero.cuda.get_array_module(x0.data))
     return Sub()(x1, x0)
-
-
-class Square(Function):
-    def forward(self, xs):
-        return xs ** 2
-
-    def backward(self, gy):
-        x = self.inputs[0].data
-        gx = 2 * x * gy
-        return gx
-
-
-# 클래스 생성 편의함수
-def square(x):
-    return Square()(x)
 
 
 class Div(Function):
@@ -289,12 +290,12 @@ class Div(Function):
 
 
 def div(x0, x1):
-    x1 = as_array(x1)
+    x1 = as_array(x1, dezero.cuda.get_array_module(x0.data))
     return Div()(x0, x1)
 
 
 def rdiv(x0, x1):
-    x1 = as_array(x1)
+    x1 = as_array(x1, dezero.cuda.get_array_module(x0.data))
     return Div()(x1, x0)
 
 
@@ -331,5 +332,6 @@ def setup_variable():
     Variable.__getitem__ = dezero.functions.get_item
 
     Variable.matmul = dezero.functions.matmul
+    Variable.dot = dezero.functions.matmul
     Variable.max = dezero.functions.max
     Variable.min = dezero.functions.min
